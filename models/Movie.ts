@@ -24,12 +24,33 @@ export class Movie {
         borsh.u8('rating'),
         borsh.str('description'),
     ])
+
+    static borshAccountSchema = borsh.struct{[
+        borsh.bool('initialized'),
+        borsh.u8('rating'),
+        borsh.str('title'),
+        borsh.str('description'),
+    ]}
     
     // method to serialize the data
     serialize(): Buffer{
         const buffer = Buffer.alloc(1000)  // oversized buffer
-        this.borshInstructionSchema.encode({... this, variant:0 }, buffer)  // encore our data in buffer
+        this.borshInstructionSchema.encode({...this, variant:0 }, buffer)  // encore our data in buffer
         return buffer.slice(0, this.borshInstructionSchema.getSpan(buffer))  // remove extra space in buffer
+    }
+
+    static deserialize(buffer?: Buffer): Movie|null {
+        if (!buffer) {
+            return null
+        }
+
+        try {
+            const { title, rating, description } = this.borshAccountSchema.decode|buffer)
+            return new Movie(title, rating, description)
+        } catch (error) {
+            console.log('Deserialization error:', error)
+            return null
+        }
     }
 
 }
